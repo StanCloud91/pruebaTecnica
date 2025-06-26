@@ -9,6 +9,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Component
 public class ClienteKafkaConsumer {
@@ -44,5 +45,23 @@ public class ClienteKafkaConsumer {
     public String obtenerNombreCliente(Integer id) {
         ClienteKafkaDTO cliente = obtenerCliente(id);
         return cliente != null ? cliente.getNombre() : null;
+    }
+
+    public Integer obtenerIdClientePorNombre(String nombre) {
+        // Buscar en Redis por nombre del cliente
+        Set<String> keys = redisTemplate.keys(CLIENTES_KEY_PREFIX + "*");
+        if (keys != null) {
+            for (String key : keys) {
+                ClienteKafkaDTO cliente = (ClienteKafkaDTO) redisTemplate.opsForValue().get(key);
+                if (cliente != null && nombre.equals(cliente.getNombre())) {
+                    return cliente.getId();
+                }
+            }
+        }
+        return null;
+    }
+
+    public boolean existeClientePorNombre(String nombre) {
+        return obtenerIdClientePorNombre(nombre) != null;
     }
 } 

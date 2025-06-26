@@ -105,13 +105,24 @@ public class CuentaService {
      * @throws DuplicateResourceException si el número de cuenta ya existe
      */
     public CuentaDTO createCuenta(CuentaDTO cuentaDTO) {
-        if (!clienteKafkaConsumer.existeCliente(cuentaDTO.getClienteId())) {
+        // Buscar cliente por nombre en Redis
+        Integer clienteId = clienteKafkaConsumer.obtenerIdClientePorNombre(cuentaDTO.getCliente());
+        if (clienteId == null) {
             throw new ResourceNotFoundException("No existe el Cliente");
         }
+        
         if (cuentaRepository.existsByNumeroCuenta(cuentaDTO.getNumeroCuenta())) {
             throw new DuplicateResourceException("Cuenta", "número de cuenta", cuentaDTO.getNumeroCuenta());
         }
-        Cuenta cuenta = convertToEntity(cuentaDTO);
+        
+        //Cuenta cuenta = convertToEntity(cuentaDTO);
+        Cuenta cuenta = new Cuenta();
+        cuenta.setNumeroCuenta(cuentaDTO.getNumeroCuenta());
+        cuenta.setTipoCuenta(cuentaDTO.getTipoCuenta());
+        cuenta.setSaldo(cuentaDTO.getSaldo());
+        cuenta.setClienteId(clienteId);
+        cuenta.setEstado(cuentaDTO.getEstado());
+        // Asignar el clienteId obtenido de Redis
         Cuenta savedCuenta = cuentaRepository.save(cuenta);
         return convertToDTO(savedCuenta);
     }
@@ -133,11 +144,18 @@ public class CuentaService {
             throw new DuplicateResourceException("Cuenta", "número de cuenta", cuentaDTO.getNumeroCuenta());
         }
         
+        // Buscar cliente por nombre en Redis
+        Integer clienteId = clienteKafkaConsumer.obtenerIdClientePorNombre(cuentaDTO.getCliente());
+        if (clienteId == null) {
+            throw new ResourceNotFoundException("No existe el Cliente");
+        }
+        
         // Actualizar campos
         existingCuenta.setNumeroCuenta(cuentaDTO.getNumeroCuenta());
         existingCuenta.setTipoCuenta(cuentaDTO.getTipoCuenta());
         existingCuenta.setSaldo(cuentaDTO.getSaldo());
-        existingCuenta.setClienteId(cuentaDTO.getClienteId());
+        existingCuenta.setClienteId(clienteId);
+        existingCuenta.setEstado(cuentaDTO.getEstado());
         
         Cuenta updatedCuenta = cuentaRepository.save(existingCuenta);
         return convertToDTO(updatedCuenta);
@@ -182,6 +200,9 @@ public class CuentaService {
     private CuentaDTO convertToDTO(Cuenta cuenta) {
         CuentaDTO dto = new CuentaDTO();
         BeanUtils.copyProperties(cuenta, dto);
+        // Obtener el nombre del cliente por ID y asignarlo al campo cliente
+        String nombreCliente = clienteKafkaConsumer.obtenerNombreCliente(cuenta.getClienteId());
+        dto.setCliente(nombreCliente != null ? nombreCliente : "Cliente no encontrado");
         return dto;
     }
     
@@ -194,6 +215,8 @@ public class CuentaService {
     private Cuenta convertToEntity(CuentaDTO dto) {
         Cuenta cuenta = new Cuenta();
         BeanUtils.copyProperties(dto, cuenta);
+        // No copiar el campo cliente ya que se maneja por separado
+        cuenta.setClienteId(null); // Se asignará después
         return cuenta;
     }
 } 

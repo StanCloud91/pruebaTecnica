@@ -37,8 +37,8 @@ public class CuentaDTO {
     @DecimalMin(value = "0.0", inclusive = true, message = "El saldo debe ser mayor o igual a 0")
     private BigDecimal saldo;
     
-    @NotNull(message = "El clienteId es obligatorio")
-    private Integer clienteId;
+    @NotBlank(message = "El cliente es obligatorio")
+    private String cliente;
     
     @NotNull(message = "El estado es obligatorio")
     private Boolean estado;
@@ -47,11 +47,11 @@ public class CuentaDTO {
     private LocalDateTime fechaActualizacion;
     
     // Constructor con parámetros básicos
-    public CuentaDTO(String numeroCuenta, String tipoCuenta, BigDecimal saldo, Integer clienteId, Boolean estado) {
+    public CuentaDTO(String numeroCuenta, String tipoCuenta, BigDecimal saldo, String cliente, Boolean estado) {
         this.numeroCuenta = numeroCuenta;
         this.tipoCuenta = tipoCuenta;
         this.saldo = saldo;
-        this.clienteId = clienteId;
+        this.cliente = cliente;
         this.estado = estado;
     }
 } 
