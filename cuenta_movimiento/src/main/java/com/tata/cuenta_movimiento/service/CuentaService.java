@@ -65,7 +65,7 @@ public class CuentaService {
      * @return DTO de la cuenta encontrada
      * @throws ResourceNotFoundException si la cuenta no existe
      */
-    public CuentaDTO getCuentaByNumeroCuenta(String numeroCuenta) {
+    public CuentaDTO getCuentaByNumeroCuenta(Integer numeroCuenta) {
         Cuenta cuenta = cuentaRepository.findByNumeroCuenta(numeroCuenta)
                 .orElseThrow(() -> new ResourceNotFoundException("Cuenta", "número de cuenta", numeroCuenta));
         return convertToDTO(cuenta);

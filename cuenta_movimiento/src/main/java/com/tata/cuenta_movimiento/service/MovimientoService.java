@@ -1,6 +1,7 @@
 package com.tata.cuenta_movimiento.service;
 
 import com.tata.cuenta_movimiento.dto.MovimientoDTO;
+import com.tata.cuenta_movimiento.dto.MovimientoOperacionDTO;
 import com.tata.cuenta_movimiento.entity.Cuenta;
 import com.tata.cuenta_movimiento.entity.Movimiento;
 import com.tata.cuenta_movimiento.exception.InsufficientFundsException;
@@ -128,7 +129,7 @@ public class MovimientoService {
         // Obtener la cuenta para validar saldo y actualizarlo
         Cuenta cuenta = cuentaRepository.findById(movimientoDTO.getCuentaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cuenta", "id", movimientoDTO.getCuentaId()));
-        // Validar fondos para retiros
+        // Validar fondos para retiros usando el saldo real de la cuenta
         if (esRetiro(movimientoDTO.getTipoMovimiento())) {
             if (cuenta.getSaldo().compareTo(movimientoDTO.getValor()) < 0) {
                 throw new InsufficientFundsException(
@@ -142,7 +143,7 @@ public class MovimientoService {
         BigDecimal nuevoSaldo = calcularNuevoSaldo(cuenta.getSaldo(), movimientoDTO.getTipoMovimiento(), movimientoDTO.getValor());
         // Crear el movimiento
         Movimiento movimiento = new Movimiento();
-        movimiento.setFecha(movimientoDTO.getFecha() != null ? movimientoDTO.getFecha() : LocalDateTime.now());
+        movimiento.setFecha(LocalDateTime.now());
         movimiento.setTipoMovimiento(movimientoDTO.getTipoMovimiento());
         movimiento.setValor(movimientoDTO.getValor());
         movimiento.setSaldo(nuevoSaldo);
@@ -249,5 +250,43 @@ public class MovimientoService {
         Movimiento movimiento = new Movimiento();
         BeanUtils.copyProperties(dto, movimiento);
         return movimiento;
+    }
+
+    public MovimientoDTO convertirOperacionAMovimiento(MovimientoOperacionDTO operacionDTO) {
+        // Buscar cuenta por número de cuenta
+        Cuenta cuenta = cuentaRepository.findByNumeroCuenta(operacionDTO.getNumeroCuenta())
+                .orElseThrow(() -> new ResourceNotFoundException("Cuenta", "numeroCuenta", operacionDTO.getNumeroCuenta()));
+
+        // Analizar el campo movimiento para obtener tipo y valor
+        String movimiento = operacionDTO.getMovimiento().toUpperCase();
+        String tipoMovimiento;
+        Double valor;
+        if (movimiento.contains("RETIRO")) {
+            tipoMovimiento = "RETIRO";
+            valor = extraerValor(movimiento);
+        } else if (movimiento.contains("DEPOSITO")) {
+            tipoMovimiento = "DEPOSITO";
+            valor = extraerValor(movimiento);
+        } else {
+            throw new IllegalArgumentException("Tipo de movimiento no soportado: " + operacionDTO.getMovimiento());
+        }
+
+        MovimientoDTO dto = new MovimientoDTO();
+        dto.setTipoMovimiento(tipoMovimiento);
+        dto.setValor(valor != null ? java.math.BigDecimal.valueOf(valor) : null);
+        dto.setSaldo(java.math.BigDecimal.valueOf(operacionDTO.getSaldoInicial()));
+        dto.setCuentaId(cuenta.getId());
+        dto.setDescripcion(operacionDTO.getMovimiento());
+        // La fecha se asigna automáticamente en createMovimiento
+        return dto;
+    }
+
+    private Double extraerValor(String movimiento) {
+        // Extrae el primer número que encuentre en el string
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(\\d+([.,]\\d+)?)").matcher(movimiento);
+        if (matcher.find()) {
+            return Double.valueOf(matcher.group(1).replace(",", "."));
+        }
+        return null;
     }
 } 

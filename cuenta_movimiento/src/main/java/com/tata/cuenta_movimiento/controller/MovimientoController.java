@@ -2,6 +2,7 @@ package com.tata.cuenta_movimiento.controller;
 
 import com.tata.cuenta_movimiento.dto.ApiResponse;
 import com.tata.cuenta_movimiento.dto.MovimientoDTO;
+import com.tata.cuenta_movimiento.dto.MovimientoOperacionDTO;
 import com.tata.cuenta_movimiento.service.MovimientoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -93,5 +94,19 @@ public class MovimientoController {
     public ResponseEntity<ApiResponse<String>> deleteMovimiento(@PathVariable Long id) {
         movimientoService.deleteMovimiento(id);
         return ResponseEntity.ok(ApiResponse.success("Movimiento eliminado exitosamente"));
+    }
+
+    /**
+     * Crea un nuevo movimiento a partir de la estructura especial de operación.
+     * 
+     * @param operacionDTO Datos de la operación
+     * @return ResponseEntity con el movimiento creado y código 201
+     */
+    @PostMapping("/operacion")
+    public ResponseEntity<ApiResponse<MovimientoDTO>> createMovimientoOperacion(@RequestBody MovimientoOperacionDTO operacionDTO) {
+        MovimientoDTO movimientoDTO = movimientoService.convertirOperacionAMovimiento(operacionDTO);
+        MovimientoDTO createdMovimiento = movimientoService.createMovimiento(movimientoDTO);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(createdMovimiento, "Movimiento creado exitosamente"));
     }
 } 
