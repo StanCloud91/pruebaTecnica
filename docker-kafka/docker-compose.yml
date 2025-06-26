@@ -41,34 +41,6 @@ services:
       - "6379:6379"
     networks:
       - broker-kafka
-
-  producer:
-    build:
-      context: ../code-producer
-      dockerfile: src/main/docker/Dockerfile.jvm
-    networks:
-      - broker-kafka
-    ports:
-      - "8080:8080"
-    environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-    depends_on:
-      - kafka
-
-  consumer:
-    build:
-      context: ../code-consumer
-      dockerfile: src/main/docker/Dockerfile.jvm
-    networks:
-      - broker-kafka
-    ports:
-      - "8081:8081"
-    environment:
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - QUARKUS_REDIS_HOSTS=redis://redis:6379
-    depends_on:
-      - kafka
-      - redis
         
 networks:
   broker-kafka:

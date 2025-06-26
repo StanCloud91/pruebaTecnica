@@ -1,12 +1,14 @@
 package com.tata.cliente_persona.service;
 
 import com.tata.cliente_persona.dto.ClienteDTO;
+import com.tata.cliente_persona.dto.ClienteKafkaDTO;
 import com.tata.cliente_persona.entity.Cliente;
 import com.tata.cliente_persona.exception.DuplicateResourceException;
 import com.tata.cliente_persona.exception.ResourceNotFoundException;
 import com.tata.cliente_persona.repository.ClienteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -45,6 +47,9 @@ public class ClienteService {
      * Repositorio para operaciones de persistencia de clientes.
      */
     private final ClienteRepository clienteRepository;
+    
+    @Autowired
+    private ClienteKafkaProducer clienteKafkaProducer;
     
     /**
      * Obtiene todos los clientes registrados en el sistema.
@@ -126,6 +131,9 @@ public class ClienteService {
         
         Cliente cliente = convertToEntity(clienteDTO);
         Cliente savedCliente = clienteRepository.save(cliente);
+        // Enviar mensaje a Kafka
+        ClienteKafkaDTO kafkaDTO = new ClienteKafkaDTO(savedCliente.getId().intValue(), savedCliente.getNombre());
+        clienteKafkaProducer.enviarCliente(kafkaDTO);
         return convertToDTO(savedCliente);
     }
     

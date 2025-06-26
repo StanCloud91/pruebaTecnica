@@ -4,9 +4,11 @@ import com.tata.cuenta_movimiento.dto.CuentaDTO;
 import com.tata.cuenta_movimiento.entity.Cuenta;
 import com.tata.cuenta_movimiento.exception.DuplicateResourceException;
 import com.tata.cuenta_movimiento.exception.ResourceNotFoundException;
+import com.tata.cuenta_movimiento.kafka.ClienteKafkaConsumer;
 import com.tata.cuenta_movimiento.repository.CuentaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,6 +30,8 @@ import java.util.stream.Collectors;
 public class CuentaService {
     
     private final CuentaRepository cuentaRepository;
+    @Autowired
+    private ClienteKafkaConsumer clienteKafkaConsumer;
     
     /**
      * Obtiene todas las cuentas registradas en el sistema.
@@ -101,10 +105,12 @@ public class CuentaService {
      * @throws DuplicateResourceException si el número de cuenta ya existe
      */
     public CuentaDTO createCuenta(CuentaDTO cuentaDTO) {
+        if (!clienteKafkaConsumer.existeCliente(cuentaDTO.getClienteId())) {
+            throw new ResourceNotFoundException("No existe el Cliente");
+        }
         if (cuentaRepository.existsByNumeroCuenta(cuentaDTO.getNumeroCuenta())) {
             throw new DuplicateResourceException("Cuenta", "número de cuenta", cuentaDTO.getNumeroCuenta());
         }
-        
         Cuenta cuenta = convertToEntity(cuentaDTO);
         Cuenta savedCuenta = cuentaRepository.save(cuenta);
         return convertToDTO(savedCuenta);
