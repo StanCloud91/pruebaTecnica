@@ -13,4 +13,5 @@ import lombok.NoArgsConstructor;
 public class ClienteKafkaDTO {
     private Integer id;
     private String nombre;
+    private String identificacion;
 } 

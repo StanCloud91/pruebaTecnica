@@ -23,7 +23,7 @@ public interface CuentaRepository extends JpaRepository<Cuenta, Long> {
      * @param numeroCuenta Número de cuenta a buscar
      * @return Optional con la cuenta encontrada
      */
-    Optional<Cuenta> findByNumeroCuenta(Integer numeroCuenta);
+    Optional<Cuenta> findByNumeroCuenta(String numeroCuenta);
     
     /**
      * Busca todas las cuentas de un cliente específico.

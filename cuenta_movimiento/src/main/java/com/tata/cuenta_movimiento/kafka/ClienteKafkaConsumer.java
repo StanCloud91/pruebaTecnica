@@ -64,4 +64,17 @@ public class ClienteKafkaConsumer {
     public boolean existeClientePorNombre(String nombre) {
         return obtenerIdClientePorNombre(nombre) != null;
     }
+
+    public Integer obtenerIdClientePorIdentificacion(String identificacion) {
+        Set<String> keys = redisTemplate.keys(CLIENTES_KEY_PREFIX + "*");
+        if (keys != null) {
+            for (String key : keys) {
+                ClienteKafkaDTO cliente = (ClienteKafkaDTO) redisTemplate.opsForValue().get(key);
+                if (cliente != null && identificacion.equals(cliente.getIdentificacion())) {
+                    return cliente.getId();
+                }
+            }
+        }
+        return null;
+    }
 } 

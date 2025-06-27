@@ -132,7 +132,7 @@ public class ClienteService {
         Cliente cliente = convertToEntity(clienteDTO);
         Cliente savedCliente = clienteRepository.save(cliente);
         // Enviar mensaje a Kafka
-        ClienteKafkaDTO kafkaDTO = new ClienteKafkaDTO(savedCliente.getId().intValue(), savedCliente.getNombre());
+        ClienteKafkaDTO kafkaDTO = new ClienteKafkaDTO(savedCliente.getId().intValue(), savedCliente.getNombre(), savedCliente.getIdentificacion());
         clienteKafkaProducer.enviarCliente(kafkaDTO);
         return convertToDTO(savedCliente);
     }

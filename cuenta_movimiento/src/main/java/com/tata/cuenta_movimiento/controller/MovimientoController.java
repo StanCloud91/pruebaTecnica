@@ -3,6 +3,7 @@ package com.tata.cuenta_movimiento.controller;
 import com.tata.cuenta_movimiento.dto.ApiResponse;
 import com.tata.cuenta_movimiento.dto.MovimientoDTO;
 import com.tata.cuenta_movimiento.dto.MovimientoOperacionDTO;
+import com.tata.cuenta_movimiento.dto.ReporteMovimientoDTO;
 import com.tata.cuenta_movimiento.service.MovimientoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -108,5 +109,17 @@ public class MovimientoController {
         MovimientoDTO createdMovimiento = movimientoService.createMovimiento(movimientoDTO);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(createdMovimiento, "Movimiento creado exitosamente"));
+    }
+
+    /**
+     * Reporte de movimientos por rango de fechas y clienteId.
+     */
+    @GetMapping("/reportes")
+    public ResponseEntity<ApiResponse<java.util.List<ReporteMovimientoDTO>>> getReporteMovimientos(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate fechaFin,
+            @RequestParam Integer clienteId) {
+        java.util.List<ReporteMovimientoDTO> reporte = movimientoService.obtenerReporteMovimientos(fechaInicio, fechaFin, clienteId);
+        return ResponseEntity.ok(ApiResponse.success(reporte, "Reporte generado exitosamente"));
     }
 } 

@@ -2,21 +2,28 @@ package com.tata.cuenta_movimiento.service;
 
 import com.tata.cuenta_movimiento.dto.MovimientoDTO;
 import com.tata.cuenta_movimiento.dto.MovimientoOperacionDTO;
+import com.tata.cuenta_movimiento.dto.ReporteMovimientoDTO;
 import com.tata.cuenta_movimiento.entity.Cuenta;
 import com.tata.cuenta_movimiento.entity.Movimiento;
 import com.tata.cuenta_movimiento.exception.InsufficientFundsException;
 import com.tata.cuenta_movimiento.exception.ResourceNotFoundException;
 import com.tata.cuenta_movimiento.repository.CuentaRepository;
 import com.tata.cuenta_movimiento.repository.MovimientoRepository;
+import com.tata.cuenta_movimiento.kafka.ClienteKafkaConsumer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Servicio para la gestión de movimientos bancarios.
@@ -35,6 +42,8 @@ public class MovimientoService {
     
     private final MovimientoRepository movimientoRepository;
     private final CuentaRepository cuentaRepository;
+    @Autowired
+    private ClienteKafkaConsumer clienteKafkaConsumer;
     
     /**
      * Obtiene todos los movimientos registrados en el sistema.
@@ -254,7 +263,7 @@ public class MovimientoService {
 
     public MovimientoDTO convertirOperacionAMovimiento(MovimientoOperacionDTO operacionDTO) {
         // Buscar cuenta por número de cuenta
-        Cuenta cuenta = cuentaRepository.findByNumeroCuenta(operacionDTO.getNumeroCuenta())
+        Cuenta cuenta = cuentaRepository.findByNumeroCuenta(String.valueOf(operacionDTO.getNumeroCuenta()))
                 .orElseThrow(() -> new ResourceNotFoundException("Cuenta", "numeroCuenta", operacionDTO.getNumeroCuenta()));
 
         // Analizar el campo movimiento para obtener tipo y valor
@@ -288,5 +297,45 @@ public class MovimientoService {
             return Double.valueOf(matcher.group(1).replace(",", "."));
         }
         return null;
+    }
+
+    public List<ReporteMovimientoDTO> obtenerReporteMovimientos(LocalDate fechaInicio, LocalDate fechaFin, Integer clienteId) {
+        // Buscar todas las cuentas del cliente
+        List<Cuenta> cuentas = cuentaRepository.findByClienteId(clienteId);
+        List<ReporteMovimientoDTO> reporte = new ArrayList<>();
+        for (Cuenta cuenta : cuentas) {
+            // Buscar movimientos de la cuenta en el rango de fechas
+            LocalDateTime inicio = fechaInicio.atStartOfDay();
+            LocalDateTime fin = fechaFin.atTime(23, 59, 59);
+            List<Movimiento> movimientos = movimientoRepository.findByCuentaIdAndFechaBetween(cuenta.getId(), inicio, fin);
+            BigDecimal saldoAntes = new BigDecimal(0);
+            // Ordenar movimientos por fecha ascendente
+            movimientos.sort(Comparator.comparing(Movimiento::getFecha));
+            for (Movimiento mov : movimientos) {
+                ReporteMovimientoDTO dto = new ReporteMovimientoDTO();
+                dto.setFecha(mov.getFecha());
+                dto.setCliente(clienteKafkaConsumer.obtenerNombreCliente(cuenta.getClienteId()));
+                dto.setNumeroCuenta(cuenta.getNumeroCuenta());
+                dto.setTipo(cuenta.getTipoCuenta());
+                // El saldo inicial es el saldo antes del movimiento
+                dto.setSaldoInicial(saldoAntes);
+                dto.setEstado(cuenta.getEstado());
+                // El movimiento es negativo si es retiro
+                BigDecimal valorMovimiento = mov.getValor();
+                if ("RETIRO".equalsIgnoreCase(mov.getTipoMovimiento())) {
+                    dto.setSaldoInicial(mov.getSaldo().add(mov.getValor()));
+                    valorMovimiento = valorMovimiento.negate();
+                    
+                }else{
+                    dto.setSaldoInicial(mov.getSaldo().subtract(mov.getValor()));
+                }
+                dto.setMovimiento(valorMovimiento);
+                dto.setSaldoDisponible(mov.getSaldo());
+                // Actualizar saldoAntes para el siguiente movimiento
+                saldoAntes = mov.getSaldo();
+                reporte.add(dto);
+            }
+        }
+        return reporte;
     }
 } 

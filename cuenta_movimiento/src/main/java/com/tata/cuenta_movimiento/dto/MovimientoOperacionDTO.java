@@ -7,7 +7,7 @@ import lombok.Data;
  */
 @Data
 public class MovimientoOperacionDTO {
-    private Integer numeroCuenta;
+    private String numeroCuenta;
     private String tipo;
     private Double saldoInicial;
     private Boolean estado;

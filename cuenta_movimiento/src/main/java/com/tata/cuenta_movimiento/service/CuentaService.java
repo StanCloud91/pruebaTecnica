@@ -65,7 +65,7 @@ public class CuentaService {
      * @return DTO de la cuenta encontrada
      * @throws ResourceNotFoundException si la cuenta no existe
      */
-    public CuentaDTO getCuentaByNumeroCuenta(Integer numeroCuenta) {
+    public CuentaDTO getCuentaByNumeroCuenta(String numeroCuenta) {
         Cuenta cuenta = cuentaRepository.findByNumeroCuenta(numeroCuenta)
                 .orElseThrow(() -> new ResourceNotFoundException("Cuenta", "número de cuenta", numeroCuenta));
         return convertToDTO(cuenta);
@@ -105,24 +105,23 @@ public class CuentaService {
      * @throws DuplicateResourceException si el número de cuenta ya existe
      */
     public CuentaDTO createCuenta(CuentaDTO cuentaDTO) {
-        // Buscar cliente por nombre en Redis
+        // Buscar el id del cliente en Redis usando la identificación
         Integer clienteId = clienteKafkaConsumer.obtenerIdClientePorNombre(cuentaDTO.getCliente());
         if (clienteId == null) {
-            throw new ResourceNotFoundException("No existe el Cliente");
+            throw new ResourceNotFoundException("Cliente con identificación " + cuentaDTO.getCliente() + " no encontrado en Redis");
         }
         
         if (cuentaRepository.existsByNumeroCuenta(cuentaDTO.getNumeroCuenta())) {
             throw new DuplicateResourceException("Cuenta", "número de cuenta", cuentaDTO.getNumeroCuenta());
         }
         
-        //Cuenta cuenta = convertToEntity(cuentaDTO);
         Cuenta cuenta = new Cuenta();
         cuenta.setNumeroCuenta(cuentaDTO.getNumeroCuenta());
         cuenta.setTipoCuenta(cuentaDTO.getTipoCuenta());
         cuenta.setSaldo(cuentaDTO.getSaldo());
         cuenta.setClienteId(clienteId);
         cuenta.setEstado(cuentaDTO.getEstado());
-        // Asignar el clienteId obtenido de Redis
+        
         Cuenta savedCuenta = cuentaRepository.save(cuenta);
         return convertToDTO(savedCuenta);
     }
