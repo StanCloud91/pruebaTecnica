@@ -1,14 +1,37 @@
 services:
+  # Base de datos MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: prueba_tecnica
+      #MYSQL_USER: root
+      #MYSQL_PASSWORD: 1234
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+      #- ./mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - broker-kafka
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Zookeeper para Kafka
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
     networks:
       - broker-kafka
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
 
+  # Kafka
   kafka:
     image: confluentinc/cp-kafka:latest
+    container_name: kafka
     networks:
       - broker-kafka
     depends_on:
@@ -22,9 +45,12 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
 
+  # Kafdrop - Interfaz web para Kafka
   kafdrop:
     image: obsidiandynamics/kafdrop:latest
+    container_name: kafdrop
     networks:
       - broker-kafka
     depends_on:
@@ -34,6 +60,7 @@ services:
     environment:
       KAFKA_BROKERCONNECT: kafka:29092
 
+  # Redis para cache
   redis:
     image: redis:7
     container_name: redis
@@ -41,7 +68,80 @@ services:
       - "6379:6379"
     networks:
       - broker-kafka
-        
+    command: redis-server --appendonly yes
+
+  # Microservicio Cliente Persona
+  cliente-persona:
+    build:
+      context: ../cliente_persona
+      dockerfile: Dockerfile
+    container_name: cliente-persona
+    restart: always
+    ports:
+      - "8070:8070"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/prueba_tecnica?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: false
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_KAFKA_PRODUCER_KEY_SERIALIZER: org.apache.kafka.common.serialization.StringSerializer
+      SPRING_KAFKA_PRODUCER_VALUE_SERIALIZER: org.springframework.kafka.support.serializer.JsonSerializer
+      SPRING_KAFKA_PRODUCER_ACKS: all
+      SPRING_KAFKA_PRODUCER_RETRIES: 3
+      SPRING_KAFKA_PRODUCER_ENABLE_IDEMPOTENCE: true
+      KAFKA_TOPIC_CLIENTES: clientes-topic
+      SERVER_PORT: 8070
+    depends_on:
+      - mysql
+      - kafka
+    networks:
+      - broker-kafka
+    volumes:
+      - ./logs/cliente-persona:/app/logs
+
+  # Microservicio Cuenta Movimiento
+  cuenta-movimiento:
+    build:
+      context: ../cuenta_movimiento
+      dockerfile: Dockerfile
+    container_name: cuenta-movimiento
+    restart: always
+    ports:
+      - "8071:8071"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/prueba_tecnica?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: false
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_KAFKA_CONSUMER_GROUP_ID: cuenta-movimiento-group
+      SPRING_KAFKA_CONSUMER_AUTO_OFFSET_RESET: earliest
+      SPRING_KAFKA_CONSUMER_KEY_DESERIALIZER: org.apache.kafka.common.serialization.StringDeserializer
+      SPRING_KAFKA_CONSUMER_VALUE_DESERIALIZER: org.springframework.kafka.support.serializer.JsonDeserializer
+      SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_TRUSTED_PACKAGES: "*"
+      KAFKA_TOPIC_CLIENTES: clientes-topic
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_TIMEOUT: 2000ms
+      SERVER_PORT: 8071
+    depends_on:
+      - mysql
+      - kafka
+      - redis
+    networks:
+      - broker-kafka
+    volumes:
+      - ./logs/cuenta-movimiento:/app/logs
+
+volumes:
+  mysql_data:
+    driver: local
+
 networks:
   broker-kafka:
     driver: bridge
