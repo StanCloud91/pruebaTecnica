@@ -15,7 +15,7 @@ import java.util.Set;
  * 
  * <p>Esta clase contiene pruebas que validan el comportamiento de la entidad Cliente,
  * incluyendo su herencia de Persona, validaciones de campos y métodos de negocio.</p>
- * 
+ * wwwwwwwwwwww
  * @author Stalin Salgado
  * @version 1.0
  * @since 2025-01-27
@@ -64,7 +64,7 @@ class ClienteTest {
         assertEquals("MASCULINO", cliente.getGenero());
         assertEquals(30, cliente.getEdad());
         assertEquals("1234567890", cliente.getIdentificacion());
-        assertEquals("Calle 123 #45-67, Bogotá", cliente.getDireccion());
+        assertEquals("Calle 123 #45-67, Bogot", cliente.getDireccion());
         assertEquals("+573001234567", cliente.getTelefono());
     }
 
