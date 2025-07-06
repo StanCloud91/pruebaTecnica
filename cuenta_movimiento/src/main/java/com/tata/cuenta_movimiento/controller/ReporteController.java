@@ -1,13 +1,11 @@
 package com.tata.cuenta_movimiento.controller;
 
 import com.tata.cuenta_movimiento.dto.ApiResponse;
-import com.tata.cuenta_movimiento.dto.ReporteMovimientoDTO;
+import com.tata.cuenta_movimiento.dto.ReporteMovimientoView;
 import com.tata.cuenta_movimiento.service.MovimientoService;
 import com.tata.cuenta_movimiento.kafka.ClienteKafkaConsumer;
-import com.tata.cuenta_movimiento.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,7 +33,7 @@ public class ReporteController {
     //     return ResponseEntity.ok(ApiResponse.success(reporte, "Reporte generado exitosamente"));
     // }
 
-    @GetMapping
+    /*@GetMapping
     public ApiResponse<List<ReporteMovimientoDTO>> generarReporte(
             @RequestParam String identificacion,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fechaInicio,
@@ -48,6 +46,16 @@ public class ReporteController {
         }
         
         List<ReporteMovimientoDTO> reporte = movimientoService.obtenerReporteMovimientos(fechaInicio, fechaFin, clienteId);
+        return ApiResponse.success(reporte, "Reporte generado exitosamente");
+    }*/
+
+    @GetMapping
+    public ApiResponse<List<ReporteMovimientoView>> generarReporte(
+            @RequestParam Integer identificacion,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fechaFin) {
+
+        List<ReporteMovimientoView> reporte = movimientoService.buscarMovimientosxClientexFecha(fechaInicio, fechaFin, identificacion);
         return ApiResponse.success(reporte, "Reporte generado exitosamente");
     }
 } 

@@ -2,7 +2,7 @@ package com.tata.cuenta_movimiento.service;
 
 import com.tata.cuenta_movimiento.dto.MovimientoDTO;
 import com.tata.cuenta_movimiento.dto.MovimientoOperacionDTO;
-import com.tata.cuenta_movimiento.dto.ReporteMovimientoDTO;
+import com.tata.cuenta_movimiento.dto.ReporteMovimientoView;
 import com.tata.cuenta_movimiento.entity.Cuenta;
 import com.tata.cuenta_movimiento.entity.Movimiento;
 import com.tata.cuenta_movimiento.exception.InsufficientFundsException;
@@ -19,11 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Comparator;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 /**
  * Servicio para la gestión de movimientos bancarios.
@@ -299,7 +296,7 @@ public class MovimientoService {
         return null;
     }
 
-    public List<ReporteMovimientoDTO> obtenerReporteMovimientos(LocalDate fechaInicio, LocalDate fechaFin, Integer clienteId) {
+    /*public List<ReporteMovimientoDTO> obtenerReporteMovimientos(LocalDate fechaInicio, LocalDate fechaFin, Integer clienteId) {
         // Buscar todas las cuentas del cliente
         List<Cuenta> cuentas = cuentaRepository.findByClienteId(clienteId);
         List<ReporteMovimientoDTO> reporte = new ArrayList<>();
@@ -337,5 +334,9 @@ public class MovimientoService {
             }
         }
         return reporte;
+    }*/
+
+    public List<ReporteMovimientoView> buscarMovimientosxClientexFecha(LocalDate fechaInicio, LocalDate fechaFin, Integer identificador) {
+        return cuentaRepository.buscarMovimientosxClientexFecha(fechaInicio, fechaFin, identificador);
     }
 } 

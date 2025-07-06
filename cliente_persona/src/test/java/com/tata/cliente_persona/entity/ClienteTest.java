@@ -64,7 +64,7 @@ class ClienteTest {
         assertEquals("MASCULINO", cliente.getGenero());
         assertEquals(30, cliente.getEdad());
         assertEquals("1234567890", cliente.getIdentificacion());
-        assertEquals("Calle 123 #45-67, Bogot", cliente.getDireccion());
+        assertEquals("Calle 123 #45-67, Bogotá", cliente.getDireccion());
         assertEquals("+573001234567", cliente.getTelefono());
     }
 
