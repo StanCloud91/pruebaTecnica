@@ -125,10 +125,6 @@ public class ClienteService {
             throw new DuplicateResourceException("Cliente", "identificación", clienteDTO.getIdentificacion());
         }
         
-        if (clienteRepository.existsByClienteId(clienteDTO.getClienteId())) {
-            throw new DuplicateResourceException("Cliente", "clienteId", clienteDTO.getClienteId());
-        }
-        
         Cliente cliente = convertToEntity(clienteDTO);
         Cliente savedCliente = clienteRepository.save(cliente);
         // Enviar mensaje a Kafka
@@ -171,10 +167,6 @@ public class ClienteService {
             throw new DuplicateResourceException("Cliente", "identificación", clienteDTO.getIdentificacion());
         }
         
-        if (clienteRepository.existsByClienteIdAndIdNot(clienteDTO.getClienteId(), id)) {
-            throw new DuplicateResourceException("Cliente", "clienteId", clienteDTO.getClienteId());
-        }
-        
         // Actualizar campos de persona
         existingCliente.setNombre(clienteDTO.getNombre());
         existingCliente.setGenero(clienteDTO.getGenero());
@@ -184,7 +176,6 @@ public class ClienteService {
         existingCliente.setTelefono(clienteDTO.getTelefono());
         
         // Actualizar campos específicos de cliente
-        existingCliente.setClienteId(clienteDTO.getClienteId());
         existingCliente.setContraseña(clienteDTO.getContraseña());
         existingCliente.setEstado(clienteDTO.getEstado());
         

@@ -38,7 +38,6 @@ class ClienteTest {
             "1234567890",          // identificacion
             "Calle 123 #45-67, Bogotá", // direccion
             "+573001234567",       // telefono
-            "CLI001",              // clienteId
             "password123",         // contraseña
             true                   // estado
         );
@@ -73,38 +72,12 @@ class ClienteTest {
      */
     @Test
     void testCamposEspecificosDeCliente() {
-        assertEquals("CLI001", cliente.getClienteId());
         assertEquals("password123", cliente.getContraseña());
         assertTrue(cliente.getEstado());
     }
 
-    /**
-     * Prueba validación de clienteId vacío.
-     */
-    @Test
-    void testClienteIdVacio() {
-        cliente.setClienteId("");
-        Set<ConstraintViolation<Cliente>> violations = validator.validate(cliente);
-        
-        assertFalse(violations.isEmpty());
-        assertTrue(violations.stream()
-            .anyMatch(v -> v.getPropertyPath().toString().equals("clienteId") && 
-                          v.getMessage().contains("obligatorio")));
-    }
 
-    /**
-     * Prueba validación de clienteId muy corto.
-     */
-    @Test
-    void testClienteIdMuyCorto() {
-        cliente.setClienteId("AB");
-        Set<ConstraintViolation<Cliente>> violations = validator.validate(cliente);
-        
-        assertFalse(violations.isEmpty());
-        assertTrue(violations.stream()
-            .anyMatch(v -> v.getPropertyPath().toString().equals("clienteId") && 
-                          v.getMessage().contains("entre 3 y 20 caracteres")));
-    }
+
 
     /**
      * Prueba validación de contraseña vacía.
@@ -160,7 +133,6 @@ class ClienteTest {
             "0987654321",
             "Avenida 456 #78-90, Medellín",
             "+573009876543",
-            "CLI002",
             "securePass456",
             false
         );
@@ -171,7 +143,6 @@ class ClienteTest {
         assertEquals("0987654321", nuevoCliente.getIdentificacion());
         assertEquals("Avenida 456 #78-90, Medellín", nuevoCliente.getDireccion());
         assertEquals("+573009876543", nuevoCliente.getTelefono());
-        assertEquals("CLI002", nuevoCliente.getClienteId());
         assertEquals("securePass456", nuevoCliente.getContraseña());
         assertFalse(nuevoCliente.getEstado());
     }
@@ -184,13 +155,13 @@ class ClienteTest {
         Cliente cliente1 = new Cliente(
             "Juan Pérez", "MASCULINO", 30, "1234567890",
             "Calle 123 #45-67, Bogotá", "+573001234567",
-            "CLI001", "password123", true
+                "password123", true
         );
         
         Cliente cliente2 = new Cliente(
             "Juan Pérez", "MASCULINO", 30, "1234567890",
             "Calle 123 #45-67, Bogotá", "+573001234567",
-            "CLI001", "password123", true
+                 "password123", true
         );
         
         // Los clientes deberían ser iguales si tienen los mismos datos
@@ -198,18 +169,5 @@ class ClienteTest {
         assertEquals(cliente1.hashCode(), cliente2.hashCode());
     }
 
-    /**
-     * Prueba que el método toString incluya información relevante.
-     */
-    @Test
-    void testToString() {
-        String toString = cliente.toString();
-        
-        // Verificar que el toString no sea nulo y contenga información del cliente
-        assertNotNull(toString);
-        assertFalse(toString.isEmpty());
-        
-        // Verificar que contenga información básica del cliente
-        assertTrue(toString.contains("CLI001") || toString.contains("clienteId=CLI001"));
-    }
+
 } 

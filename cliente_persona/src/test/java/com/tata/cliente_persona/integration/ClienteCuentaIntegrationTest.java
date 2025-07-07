@@ -55,7 +55,7 @@ class ClienteCuentaIntegrationTest {
         clienteDTO.setIdentificacion("9876543210");
         clienteDTO.setDireccion("Calle 789 #12-34, Cali");
         clienteDTO.setTelefono("+573001112223");
-        clienteDTO.setClienteId("CLI_INT_001");
+        //clienteDTO.setClienteId("CLI_INT_001");
         clienteDTO.setContraseña("testPassword123");
         clienteDTO.setEstado(true);
 
@@ -85,7 +85,7 @@ class ClienteCuentaIntegrationTest {
                 () -> assertNotNull(clienteCreado.getId(), "ID del cliente"),
                 () -> assertEquals("Ana García", clienteCreado.getNombre(), "Nombre del cliente"),
                 () -> assertEquals("9876543210", clienteCreado.getIdentificacion(), "Identificación del cliente"),
-                () -> assertEquals("CLI_INT_001", clienteCreado.getClienteId(), "ID de cliente"),
+                //() -> assertEquals("CLI_INT_001", clienteCreado.getClienteId(), "ID de cliente"),
                 () -> assertTrue(clienteCreado.getEstado(), "Estado del cliente")
         );
 
@@ -108,7 +108,7 @@ class ClienteCuentaIntegrationTest {
                 "1112223334",
                 "Avenida 456 #78-90, Medellín",
                 "+573004445556",
-                "CLI_INT_002",
+                //"CLI_INT_002",
                 "password456",
                 true
         );
@@ -146,7 +146,7 @@ class ClienteCuentaIntegrationTest {
         clienteDTO.setIdentificacion("5556667778");
         clienteDTO.setDireccion("Carrera 15 #23-45, Barranquilla");
         clienteDTO.setTelefono("+573005556667");
-        clienteDTO.setClienteId("CLI_INT_003");
+        //clienteDTO.setClienteId("CLI_INT_003");
         clienteDTO.setContraseña("securePass789");
         clienteDTO.setEstado(true);
 
@@ -184,7 +184,7 @@ class ClienteCuentaIntegrationTest {
         clienteDTO.setIdentificacion("9998887776");
         clienteDTO.setDireccion("Calle 20 #30-40, Bucaramanga");
         clienteDTO.setTelefono("+573009998887");
-        clienteDTO.setClienteId("CLI_INT_004");
+        //clienteDTO.setClienteId("CLI_INT_004");
         clienteDTO.setContraseña("testPass123");
         clienteDTO.setEstado(true);
 
