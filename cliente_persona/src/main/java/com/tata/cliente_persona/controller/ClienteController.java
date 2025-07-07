@@ -81,7 +81,6 @@ public class ClienteController {
      *   "data": {
      *     "id": 1,
      *     "nombre": "Juan Pérez",
-     *     "clienteId": "CLI001",
      *     ...
      *   }
      * }
